@@ -1,6 +1,4 @@
 
-
-
 class Map {
 	constructor(map) {
 		this.map = map;
