@@ -1,0 +1,22 @@
+/* Help class */
+
+.overflow-auto {
+	overflow: auto;
+}
+
+.overflow-hidden {
+	overflow: hidden;
+}
+
+.map {
+	height: 400px;
+	width: 100%;
+}
+
+.mh-150 {
+	max-height: 150px;
+}
+
+.mh-700 {
+	max-height: 700px;
+}
