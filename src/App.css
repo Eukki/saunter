@@ -20,3 +20,7 @@
 .mh-700 {
 	max-height: 700px;
 }
+
+.min-w-15 {
+	min-width: 15px;
+}

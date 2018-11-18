@@ -27,6 +27,11 @@ function removeError() {
   div.innerHTML = '';
 }
 
+function removeActive() {
+  let active = document.getElementsByClassName('active')[0];
+  active.classList.remove('active');
+}
+
 class Map {
 
 
@@ -56,6 +61,8 @@ class App extends Component {
     this.createMap = this.createMap.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.setActive = this.setActive.bind(this);
+    this.addToPrimary = this.addToPrimary.bind(this);
+    this.removePath = this.removePath.bind(this);
   }
 
   openModal() {
@@ -85,7 +92,8 @@ class App extends Component {
         short: short,
         full: full,
         primary: false,
-        length: 0
+        length: 0,
+        id: generateID()
       }
 
       paths.push(path);
@@ -102,6 +110,34 @@ class App extends Component {
     
   }
 
+  removePath() {
+    let paths = this.state.paths;
+    let currentPath = this.state.activePath;
+    let toRemove = paths.indexOf(currentPath);
+
+    paths.splice(toRemove, 1);
+    removeActive();
+
+    this.setState({
+      paths: paths,
+      activePath: false
+    })
+  }
+
+  addToPrimary() {
+    let paths = this.state.paths;
+    let currentPath = this.state.activePath;
+    let divCurrentPath = document.getElementById(currentPath.id).getElementsByClassName('min-w-15')[0];
+    let toPrimary = paths.indexOf(currentPath);
+
+    paths[toPrimary].primary = true;
+    divCurrentPath.classList.remove('d-none');
+    divCurrentPath.classList.add('d-inline-block');
+    this.setState({
+      paths: paths
+    })
+  }
+
   createMap() {
     return {
       LatLng: []
@@ -115,8 +151,7 @@ class App extends Component {
 
   setActive(e, path) {
     try {
-      let active = document.getElementsByClassName('active')[0];
-      active.classList.remove('active');
+      removeActive();
     } catch(e) {
       console.log('No active');
     }
@@ -136,9 +171,16 @@ class App extends Component {
     let activePath = this.state.activePath;
     let createPaths = paths.map((path, i) => {
           return(
-              <a href="#" className="list-group-item list-group-item-action flex-column align-items-start mh-150 overflow-hidden" onClick={(e) => this.setActive(e, path)} key={i}>
+              <a href="#" id={path.id} className="list-group-item list-group-item-action flex-column align-items-start mh-150 overflow-hidden" onClick={(e) => this.setActive(e, path)} key={i}>
                 <div className="d-flex w-100 justify-content-between">
-                  <h5 className="mb-1 overflow-hidden">{path.title}</h5>
+                  <h5 className="mb-1 overflow-hidden">
+                    <div className="d-none min-w-15 mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" data-prefix="far" data-icon="star" className="svg-inline--fa fa-star fa-w-18" role="img" viewBox="0 0 576 512">
+                        <path xmlns="http://www.w3.org/2000/svg" fill="currentColor" d="M528.1 171.5L382 150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0L194 150.2 47.9 171.5c-26.2 3.8-36.7 36.1-17.7 54.6l105.7 103-25 145.5c-4.5 26.3 23.2 46 46.4 33.7L288 439.6l130.7 68.7c23.2 12.2 50.9-7.4 46.4-33.7l-25-145.5 105.7-103c19-18.5 8.5-50.8-17.7-54.6zM388.6 312.3l23.7 138.4L288 385.4l-124.3 65.3 23.7-138.4-100.6-98 139-20.2 62.2-126 62.2 126 139 20.2-100.6 98z"></path>
+                      </svg>
+                    </div>
+                    {path.title}
+                  </h5>
                   <small className="font-weight-bold">{path.length} km</small>
                 </div>
                 <p className="mb-1">{path.short}</p>
@@ -159,8 +201,8 @@ class App extends Component {
           </div>
           <div className="card-body">
             <div className="btn-group" role="group">
-              <button type="button" className="btn btn-secondary">Add to favorite</button>
-              <button type="button" className="btn btn-secondary text-danger">Remove</button>
+              <button type="button" className="btn btn-secondary" onClick={this.addToPrimary}>Add to primery</button>
+              <button type="button" className="btn btn-secondary text-danger" onClick={this.removePath}>Remove</button>
             </div>
           </div>
         </div>
