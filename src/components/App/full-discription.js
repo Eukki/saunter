@@ -1,49 +1,62 @@
 import React, { Component } from 'react';
-import GoogleMap from '../map.js';
+import GoogleMap from '../Map/map';
 
-const paths = this.props.paths;
-const activePath = this.props.activePath;
-const modalMap = this.props.modalMap;
+export default class FullDiscription extends Component {
+  constructor(props) {
+    super(props);
 
-function removeActive() {
-    let active = document.getElementsByClassName('active')[0];
-    active.classList.remove('active');
-}
+    this.addPrimary = this.addPrimary.bind(this);
+    this.removePrimary = this.removePrimary.bind(this);
+    this.removePath = this.removePath.bind(this);
+  }
+  
+  addPrimary() {
+    const paths = this.props.paths;
+    let current = paths.indexOf(this.props.activePath);
 
-function addToPrimary() {
-    let divCurrentPath = document.getElementById(activePath.id).getElementsByClassName('min-w-15')[0];
-    let toPrimary = paths.indexOf(activePath);
+    paths[current].isPrimary = true;
+    this.props.updatePaths(paths, true);
+  }
 
-    paths[toPrimary].primary = true;
-    this.props.updatePaths(paths)
-}
+  removePrimary() {
+    const paths = this.props.paths;
+    let current = paths.indexOf(this.props.activePath);
 
-function removePath() {
-    let toRemove = paths.indexOf(activePath);
+    paths[current].isPrimary = false;
+    this.props.updatePaths(paths, true);
+  }
 
-    paths.splice(toRemove, 1);
-    removeActive();
+  removePath() {
+    const paths = this.props.paths;
+    let current = paths.indexOf(this.props.activePath);
 
-    this.props.updatePaths(paths)
-}
+    paths.splice(current, 1);
+    this.props.updateActive(false);
+    this.props.updatePaths(paths, true);
+  }
 
-export const fullDiscription = (activePath, modalMap) => {
-    return (
-        <div className={activePath ? "card mb-3" : "hidden"}>
-          <h3 className="card-header">{activePath.title}</h3>
-          <div className="card-body">
-            <h5 className="card-title">{activePath.length} km</h5>
-            <p className="card-text">{activePath.full}</p>
-          </div>
-          <div className="map">
-            <GoogleMap LatLng={modalMap.LatLng} />
-          </div>
-          <div className="card-body">
-            <div className="btn-group" role="group">
-              <button type="button" className="btn btn-secondary" onClick={addToPrimary()}>Add to primery</button>
-              <button type="button" className="btn btn-secondary text-danger" onClick={removePath()}>Remove</button>
-            </div>
-          </div>
-        </div>
-    )
+
+  render() {
+    const paths = this.props.paths;
+    const activePath = this.props.activePath;
+    const toReturn = !activePath ? '' :
+            <div className="card mb-3 mt-3">
+              <h3 className="card-header">{activePath.title}</h3>
+              <div className="card-body">
+                <h5 className="card-title">{activePath.length} km</h5>
+                <p className="card-text">{activePath.full}</p>
+                <div className="map">
+                  <GoogleMap map={activePath.map} paths={paths} isAddPoint={false} fromFull={true} updatePaths={this.props.updatePaths} />
+                </div>
+                <div className="btn-group" role="group">
+                  <button type="button" className="btn btn-secondary" onClick={activePath.isPrimary ? this.removePrimary : this.addPrimary}>{activePath.isPrimary ? "Remove from primary" : "Add to primary"}</button>
+                  <button type="button" className="btn btn-secondary text-danger" onClick={this.removePath}>Remove</button>
+                </div>
+              </div>
+            </div>;
+
+    return(
+      toReturn
+    );
+  }
 };
