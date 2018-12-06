@@ -5,7 +5,7 @@ import { Header } from './header';
 import { List } from './list';
 import FullDiscription from './full-discription';
 import Modal from './modal';
-import database from '../Firebase';
+import database from '../Firebase/firebase';
 
 import './Style/bootstrap.min.css';
 import './Style/style.css';
@@ -36,14 +36,11 @@ class App extends Component {
     database.ref('paths').once('value').then(snapshot => {
       const val = snapshot.val();
       let paths = [];
-      let activePath = false;
       
       if (val) val.forEach(path => paths.push(path))
-      if (paths[0]) activePath = paths[0];
-      if (activePath) this.updatePoints(paths);
+      if (paths[0]) this.updatePoints(paths);
 
       this.setState({
-        activePath,
         loading: false
       })
     })
@@ -104,6 +101,7 @@ class App extends Component {
   updatePoints(paths) {
     const google = this.props.google;
     let updatePaths = [];
+    let activePath = false;
 
     paths.forEach(path => {
       let updateMap = []
@@ -122,7 +120,11 @@ class App extends Component {
       updatePaths.push(path);
     })
 
-    this.setState({paths: updatePaths})
+    activePath = updatePaths[0];
+    this.setState({
+      paths: updatePaths,
+      activePath 
+    })
   }
 
   showModal(isShowModal) {
