@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Map, GoogleApiWrapper } from 'google-maps-react';
+import { Map, Marker, GoogleApiWrapper } from 'google-maps-react';
 
 export class GoogleMapRender extends Component {
 	constructor(props) {
@@ -16,7 +16,7 @@ export class GoogleMapRender extends Component {
 		this.initDirections = this.initDirections.bind(this);
 		this.setDirections = this.setDirections.bind(this);
 		this.displayRoute = this.displayRoute.bind(this);
-		this.isDraggable = this.isDraggable.bind(this);
+		this.onDrag = this.onDrag.bind(this);
 		this.eventListClick = this.eventListClick.bind(this);
 	}
 
@@ -25,7 +25,7 @@ export class GoogleMapRender extends Component {
 	}
 
 	componentDidUpdate() {
-		this.isDraggable(this.props.isAddPoint);
+		this.state.display.setOptions({draggable: this.props.isAddPoint})
 	}
 
 	componentWillUnmount() {
@@ -50,10 +50,9 @@ export class GoogleMapRender extends Component {
 		}
     }
 
-	setDirections(mapProps, map) {
+	setDirections(mapProps, map, points) {
 		const display = this.state.display;
-		const google = this.props.google;
-		const points = this.state.map;
+		const displayPoints = points || this.state.map;
 
 		display.setMap(map);
 		display.addListener('directions_changed', (e) => {
@@ -65,19 +64,21 @@ export class GoogleMapRender extends Component {
 
           	// Update all points
 	        for (let i = 0; i < legs.length; i++) {
-	        	let start = new google.maps.Marker({
-		          position: new google.maps.LatLng(legs[i].start_location.lat(), legs[i].start_location.lng())
-		        });
+	        	let start = {
+		          lat: legs[i].start_location.lat(), 
+		          lng: legs[i].start_location.lng()
+	        	}
 		        updatePoints.push(start);
 
 	        	if (i === legs.length-1) {
-			        let end = new google.maps.Marker({
-			          position: new google.maps.LatLng(legs[i].end_location.lat(), legs[i].end_location.lng())
-			        });
+			        let end = {
+			          lat: legs[i].end_location.lat(), 
+			          lng: legs[i].end_location.lng()
+		        	}
 	        		updatePoints.push(end);
 	        	}
 	        }
-
+	        
 	        if (!this.props.fromFull) this.props.updateMap(updatePoints);
         });
 
@@ -89,16 +90,15 @@ export class GoogleMapRender extends Component {
 			}
 		}
 
-		this.displayRoute(points);
+		this.displayRoute(displayPoints);
 	}
 	
 	displayRoute(points) {
 		const service = this.state.service;
 		const display = this.state.display;
 		const google = this.props.google;
-		let start, steps, finish, isOneElement;
+		let start, steps, finish;
 		try {
-			isOneElement = points[0] && !points[1] ? true : false;
 			start = points[0];
 			steps = points.slice(1, points.length-1);
 			finish = points[1] ? points[points.length-1] : '';
@@ -108,17 +108,15 @@ export class GoogleMapRender extends Component {
 
 		const waypts = !steps ? '' : steps.map((step) => {
 			return {
-				location: new google.maps.LatLng(step.position.lat(), step.position.lng()),
+				location: new google.maps.LatLng(step.lat, step.lng),
 				stopover: true
 			}
 		});
 
-		setMarkers();
-
 		if (start && finish) {
 			service.route({
-				origin: new google.maps.LatLng(start.position.lat(), start.position.lng()),
-				destination: new google.maps.LatLng(finish.position.lat(), finish.position.lng()),
+				origin: new google.maps.LatLng(start.lat, start.lng),
+				destination: new google.maps.LatLng(finish.lat, finish.lng),
 				waypoints: waypts,
 				optimizeWaypoints: true,
 				travelMode: google.maps.TravelMode.DRIVING
@@ -131,30 +129,20 @@ export class GoogleMapRender extends Component {
 				}
 			})
 		}
-
-		function setMarkers() {
-			if (!isOneElement) {
-				for (var i = 0; i < points.length; i++) {
-		          points[i].setMap(null);
-		        }
-			}
-		}
 	}
 
 	addPoint(mapProps, map, e) {
 		if (this.props.isAddPoint) {
-			const {google} = mapProps;
-			const point = new google.maps.Marker({
-	          position: new google.maps.LatLng(e.latLng.lat(), e.latLng.lng()),
-	          map: map,
-	          draggable: true
-	        });
+			const points = this.props.map;
+			const point = {
+				lat: e.latLng.lat(),
+				lng: e.latLng.lng()
+			}
 
-			const points = this.state.map;
 			points.push(point);
 
 			if (!this.props.fromFull) this.props.updateMap(points);
-			this.setDirections(mapProps, map);
+			this.setDirections(mapProps, map, points);
 		}
 	}
 
@@ -168,29 +156,15 @@ export class GoogleMapRender extends Component {
         if (!this.props.fromFull) this.props.updateLength(total.toFixed(1));
     }
 
-	isDraggable(isAddPoint) {
-		const display = this.state.display;
-		let marker;
-
-		if (isAddPoint) {
-			display.setOptions({draggable: true})
-			
-			try {
-				marker = this.state.map[0];
-				marker.setDraggable(true);
-			} catch(e) {
-				console.log();
-			}
-		} else {
-			display.setOptions({draggable: false})
-			
-			try {
-				marker = this.state.map[0];
-				marker.setDraggable(false);
-			} catch(e) {
-				console.log();
-			}
+	onDrag(map, marker) {
+		const points = this.state.map;
+		const point = {
+			lat: marker.position.lat(),
+			lng: marker.position.lng()
 		}
+
+		points[0] = point;
+		this.props.updateMap(points);
 	}
 
 	eventListClick(e) {
@@ -198,13 +172,16 @@ export class GoogleMapRender extends Component {
 		const currentPathId = e.currentTarget.getAttribute('id');
 	  	paths.forEach((path) => {
 	  		if (currentPathId === path.id) {
-	  			this.setState(path.map);
+	  			this.setState({map: path.map});
 	  			this.displayRoute(path.map);
 	  		};
 	  	})
 	}
 
 	render() {
+		const points = this.state.map;
+		const isOneElement = points[0] && !points[1] ? true : false;
+		const isAddPoint = this.props.isAddPoint;
 		return (
 			<Map 
 	            google={this.props.google}
@@ -214,6 +191,10 @@ export class GoogleMapRender extends Component {
 	            onClick={this.addPoint}
 	            onReady={this.setDirections}
             >
+            	{isOneElement && <Marker draggable={isAddPoint}
+            		position={{lat: points[0].lat, lng: points[0].lng}}
+            		onDragend={this.onDrag}
+            		label={{color: 'white', text: 'A'}} />}
           	</Map> 
 		)
 	}

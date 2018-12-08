@@ -93,7 +93,7 @@ export default class Modal extends Component {
         }
 
         paths.push(path);
-        this.props.updatePaths(paths, true);
+        this.props.updatePaths(paths);
         this.props.updateActive(path);
 
         removeValue();
@@ -116,7 +116,7 @@ export default class Modal extends Component {
 
     updateMap(map) {
       this.setState({map});
-      if (map[1]) handleChange('error-map');
+      if (map[1]) handleChange('error-map');  
     }
 
     updateLength(length) {
@@ -128,7 +128,6 @@ export default class Modal extends Component {
     }
 
     render() {
-      const paths = this.props.paths;
       const map = this.state.map;
       const length = this.state.length;
       const show = this.props.isShowModal;
@@ -174,7 +173,7 @@ export default class Modal extends Component {
                     <div className="col-md-6 col-xs-12">
                       <div className="map">
                         <button type="button" className="btn btn-primary btn-map btn-sm" id="btn-addPoint" onClick={this.toggleAddPoint}>{!isAddPoint ? 'Add marker' : 'Stop'}</button> 
-                        <GoogleMap map={map} paths={paths} updateMap={this.updateMap} updateLength={this.updateLength} updatePaths={this.props.updatePaths} isAddPoint={isAddPoint} />
+                        <GoogleMap map={map} updateMap={this.updateMap} updateLength={this.updateLength} isAddPoint={isAddPoint} />
                         <div className="invalid-feedback error-map"></div>
                       </div>
                     </div>

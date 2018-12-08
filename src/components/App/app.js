@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { GoogleApiWrapper } from 'google-maps-react';
+import database from '../Firebase/firebase';
 
 import { Header } from './header';
 import { List } from './list';
 import FullDiscription from './full-discription';
 import Modal from './modal';
-import database from '../Firebase/firebase';
 
 import './Style/bootstrap.min.css';
 import './Style/style.css';
@@ -25,7 +24,6 @@ class App extends Component {
     this.update = this.update.bind(this);
     this.updateActive = this.updateActive.bind(this);
     this.updateSearch = this.updateSearch.bind(this);
-    this.updatePoints = this.updatePoints.bind(this);
     this.showModal = this.showModal.bind(this);
     this.save = this.save.bind(this);
   }
@@ -36,11 +34,14 @@ class App extends Component {
     database.ref('paths').once('value').then(snapshot => {
       const val = snapshot.val();
       let paths = [];
+      let activePath = false;
       
       if (val) val.forEach(path => paths.push(path))
-      if (paths[0]) this.updatePoints(paths);
+      if (paths[0]) activePath = paths[0];
 
       this.setState({
+        paths,
+        activePath,
         loading: false
       })
     })
@@ -61,18 +62,9 @@ class App extends Component {
 
       if (path.map[0]) {
         path.map.forEach((point) => {
-          let lat, lng;
-          if (point.position) {
-            lat = point.position.lat();
-            lng = point.position.lng();
-          } else {
-            lat = point.lat;
-            lng = point.lng;
-          }
-
           push.map.push({
-            lat: lat,
-            lng: lng
+            lat: point.lat,
+            lng: point.lng
           })
         })
       }
@@ -82,9 +74,9 @@ class App extends Component {
     database.ref('paths').set(savePaths)
   }
 
-  update(paths, save) {
+  update(paths) {
     this.setState({paths});
-    if (save) this.save(paths);
+    this.save(paths);
   }
 
   updateActive(activePath) {
@@ -95,35 +87,6 @@ class App extends Component {
     this.setState({
       search: e.target.value,
       activePath: false
-    })
-  }
-
-  updatePoints(paths) {
-    const google = this.props.google;
-    let updatePaths = [];
-    let activePath = false;
-
-    paths.forEach(path => {
-      let updateMap = []
-      
-      path.map.forEach(point => {
-        if (point.lat) {
-          let marker = new google.maps.Marker({
-                position: new google.maps.LatLng(point.lat, point.lng),
-                draggable: true
-              });
-          updateMap.push(marker)
-        }
-      })
-
-      path.map = updateMap;
-      updatePaths.push(path);
-    })
-
-    activePath = updatePaths[0];
-    this.setState({
-      paths: updatePaths,
-      activePath 
     })
   }
 
@@ -175,6 +138,4 @@ class App extends Component {
   }
 }
 
-export default GoogleApiWrapper({
-  apiKey: ('AIzaSyDxtiunl1kADOT4ZnUHcO3CTMeE5uVOAJI')
-})(App)
+export default App;

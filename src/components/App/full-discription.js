@@ -15,7 +15,7 @@ export default class FullDiscription extends Component {
     let current = paths.indexOf(this.props.activePath);
 
     paths[current].isPrimary = true;
-    this.props.updatePaths(paths, true);
+    this.props.updatePaths(paths);
   }
 
   removePrimary() {
@@ -23,7 +23,7 @@ export default class FullDiscription extends Component {
     let current = paths.indexOf(this.props.activePath);
 
     paths[current].isPrimary = false;
-    this.props.updatePaths(paths, true);
+    this.props.updatePaths(paths);
   }
 
   removePath() {
@@ -32,7 +32,7 @@ export default class FullDiscription extends Component {
 
     paths.splice(current, 1);
     this.props.updateActive(false);
-    this.props.updatePaths(paths, true);
+    this.props.updatePaths(paths);
   }
 
 
@@ -46,7 +46,7 @@ export default class FullDiscription extends Component {
                 <h5 className="card-title">{activePath.length} km</h5>
                 <p className="card-text">{activePath.full}</p>
                 <div className="map">
-                  <GoogleMap map={activePath.map} paths={paths} isAddPoint={false} fromFull={true} updatePaths={this.props.updatePaths} />
+                  <GoogleMap map={activePath.map} paths={paths} isAddPoint={false} fromFull={true} />
                 </div>
                 <div className="btn-group" role="group">
                   <button type="button" className="btn btn-secondary" onClick={activePath.isPrimary ? this.removePrimary : this.addPrimary}>{activePath.isPrimary ? "Remove from primary" : "Add to primary"}</button>
